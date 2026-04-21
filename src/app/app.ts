@@ -3,22 +3,32 @@ import express, { Express } from "express";
 import { Request, Response } from "express";
 import cors from "cors";
 import { ServerApp } from "../core/server";
+import { dbConnection } from "./database/mongo/connect";
+import { CONFIG } from "../config";
 
+// Implementación principal del servidor Express.
+// Cumple el contrato ServerApp y encapsula toda la configuración HTTP.
 export class Server implements ServerApp {
-  app: Express;
-  server: any;
+  app: Express; // instancia de la aplicación Express
+  server: any;  // referencia al servidor HTTP, usada para poder cerrarlo
 
   constructor() {
     this.app = express();
+    // Aplica los middlewares base al inicializar
     this.setServerComunication();
   }
 
+  // Registra los middlewares necesarios para que el servidor procese peticiones:
+  // - body-parser: deserializa el body de las peticiones como JSON
+  // - cors: permite peticiones desde otros orígenes (cross-origin)
   protected setServerComunication(): void {
     this.app.use(bodyParser.json());
     this.app.use(cors());
   }
 
   async start() {
+    // Middleware global que se ejecuta en cada petición entrante.
+    // Registra la llamada y propaga errores al manejador de Express.
     this.app.use(async (_, __, next) => {
       try {
         console.log("se ejecuto otro llamado a el servidor desde una ruta");
@@ -29,16 +39,19 @@ export class Server implements ServerApp {
       }
     })
 
-    //prueba de ruta en la raiz
+    // Ruta raíz de prueba para verificar que el servidor está activo
     this.app.get("/", (_req: Request, res: Response) => {
       res.send("Hello World");
     });
 
-    this.server = this.app.listen(3000, () => {
+    // Inicia el servidor HTTP y comienza a escuchar en el puerto configurado
+    this.server = this.app.listen(CONFIG.app.port, () => {
       console.log("server started")
     });
   }
 
+  // Cierra el servidor HTTP limpiamente.
+  // Útil en tests para liberar el puerto entre ejecuciones.
   async close(): Promise<void> {
     if (this.server) {
       await this.server.close();
@@ -46,12 +59,14 @@ export class Server implements ServerApp {
   }
 }
 
+// Punto de entrada: crea el servidor, lo inicia y conecta la base de datos
 const server = new Server();
 
 try {
   (async () => {
     await server.start();
-    console.log(`API listen on ${3000}`);
+    dbConnection();
+    console.log(`API listen on ${CONFIG.app.port}`);
   })();
 
 } catch (error) {
