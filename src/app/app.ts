@@ -5,6 +5,7 @@ import cors from "cors";
 import { ServerApp } from "../core/server";
 import { dbConnection } from "./database/mongo/connect";
 import { CONFIG } from "../config";
+import { RoutesApi } from "./routes/routes";
 
 // Implementación principal del servidor Express.
 // Cumple el contrato ServerApp y encapsula toda la configuración HTTP.
@@ -16,6 +17,7 @@ export class Server implements ServerApp {
     this.app = express();
     // Aplica los middlewares base al inicializar
     this.setServerComunication();
+    new RoutesApi(this.app);
   }
 
   // Registra los middlewares necesarios para que el servidor procese peticiones:
