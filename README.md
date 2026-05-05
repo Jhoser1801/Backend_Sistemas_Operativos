@@ -1,3 +1,6 @@
 # backend
 
 necesitan configurar el config.ts en local
+
+hice cambioooos
+gg
