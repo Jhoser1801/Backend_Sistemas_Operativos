@@ -3,6 +3,7 @@ import { CustomResponse, User, UserService } from "../interfaces/user";
 import { UserModel } from "../../models/user";
 import bycrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { generateToken } from "../../helpers/jwt";
 
 export type UserResponse = CustomResponse<User>;
 
@@ -31,11 +32,12 @@ export class UserController implements UserService<UserResponse> {
 
             const user_model = await UserModel.create({id: crypto.randomUUID(), ...user});
 
-            //TODO: GENERAR TOKEN DE USUARIO
+            const token = await generateToken(user_model.id); // generacion de jwt   
 
             return res.status(200).json({
                 message: 'User created successfully',
-                user: user_model
+                user: user_model,
+                token
             });
 
         } catch (error) {
@@ -46,9 +48,22 @@ export class UserController implements UserService<UserResponse> {
 
 
 
-    // login(req: Request, res: Response): Promise<CustomResponse<UserResponse>> {
-    //     throw new Error("Method not implemented.");
-    // }
+    async login(req: Request, res: Response): Promise<CustomResponse<UserResponse>> {
+        const { email, password } = req.body;
+        try {
+            const find_user = await UserModel.findOne({email});
+            if (!find_user) return res.status(400).json({ok: false, error_message: 'email no encontrado'});
+            
+            const validPassword = bycrypt.compareSync(password, find_user.password);
+            if (!validPassword) return res.status(400).json({ok: false, error_message: 'la contraseña no es valida'});
+
+            const token = await generateToken(find_user.id);
+            return res.status(200).json({ ok: true, message: 'usuario logeado', user: find_user, token});
+        } catch (error) {
+            console.error('error en el login', error);
+            return res.status(400).json({ok: false, error_message: `error al intentar logearse ${error}`});
+        }
+    }
 
 
     // getUserCredentials(req: Request, res: Response): Promise<Response<User>> {
