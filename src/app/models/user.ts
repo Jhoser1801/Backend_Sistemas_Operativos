@@ -33,6 +33,17 @@ export const UserSchema = new Schema<IUserDocument>({
       return this.isNew;
     },
   },
+   role: {
+    type: String,
+    enum: ['superadmin', 'admin_pais', 'editor'],
+    required: true,
+    default: 'editor',
+  },
+  country: {
+    type: String,
+    required: false,
+    default: null,
+  },
   CreatedAt: {
     type: Date,
     required: function (this: IUserDocument) {
@@ -55,7 +66,7 @@ UserSchema.method('toJSON', function () {
 
 UserSchema.pre('save', function (next) {
   if (!this.isNew) {
-    this.UpdatedAt = new Date();
+    (this as any).UpdatedAt = new Date();
   }
   next();
 });

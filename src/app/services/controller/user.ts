@@ -27,7 +27,9 @@ export class UserController implements UserService<UserResponse> {
                 name: req.body.name,
                 email,
                 phone,
-                password
+                password,
+                role: req.body.role || 'editor',     
+    country: req.body.country || null, 
             }
 
             const user_model = await UserModel.create({id: crypto.randomUUID(), ...user});

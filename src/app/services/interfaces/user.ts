@@ -6,6 +6,8 @@ export interface User {
     email   : string;
     phone   : string;
     password: string;
+    role : 'superadmin' | 'admin_pais' | 'editor';
+    country?: string;
 }
 
 export type IUser = RowRecord<User>;
